@@ -15,7 +15,7 @@ MELCHIOR・BALTHASAR・CASPERが順番に発言し、最終的に各人格が「
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | LLM | Ollama (ローカル), デフォルト: `gpt-oss:20b` |
-| State管理 | useReducer (クライアント) |
+| State管理 | useReducer + React Context（ルートレイアウト） |
 | 通信 | SSE (Server-Sent Events) |
 | 設定永続化 | localStorage |
 | 会話履歴永続化 | SQLite (`better-sqlite3`, `data/magi.db`) |
@@ -74,6 +74,8 @@ Phase 3 - 投票（並列実行）
 │   └── settings/
 │       ├── PersonalityEditor.tsx  # 人格プロンプト編集フォーム
 │       └── ModelSelector.tsx      # Ollamaモデル名入力
+├── contexts/
+│   └── MAGIContext.tsx            # React Context（MAGIProvider / useMAGIContext）
 ├── hooks/
 │   ├── useMAGI.ts                 # 状態管理（useReducer）+ SSE接続
 │   └── useSettings.ts             # localStorage設定管理
@@ -205,6 +207,23 @@ function buildMessageHistory(history, personalityId) {
 | thinking | PROCESSING / 黄色・点滅 |
 | streaming | TRANSMITTING / 緑 |
 | done | COMPLETE / グレー |
+
+---
+
+## 状態管理アーキテクチャ
+
+```
+app/layout.tsx (Server Component)
+  └── <MAGIProvider> (Client Component, contexts/MAGIContext.tsx)
+        └── useMAGI() ← useReducer + SSE接続 + SQLite永続化
+              ├── app/page.tsx       useMAGIContext() で状態を参照
+              └── app/settings/page.tsx  (状態不要・useSettings のみ)
+```
+
+**ポイント:**
+- `MAGIProvider` をルートレイアウトに置くことで、`/` ↔ `/settings` のページ遷移をまたいで状態が保持される
+- ストリーミング中は `MAGIHeader` の SETTINGS リンクが無効化され、設定変更を防止
+- `HISTORY (N)` ボタン: 履歴が1件以上あるとヘッダーに表示。クリックで `#conversation-history` にスクロール
 
 ---
 
