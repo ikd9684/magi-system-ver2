@@ -68,23 +68,23 @@ export function MAGIPanel({ personalityId, output, debatePhase }: MAGIPanelProps
 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black bg-opacity-20">
-        {/* Active streaming */}
-        {isActive && (
-          <StreamingText
-            text={output.content}
-            isStreaming={output.status === 'streaming'}
-            className={`${config.color}`}
-          />
-        )}
-
         {/* Phase 1 output (shown when phase >= 2 or complete) */}
-        {phase1Content && !isActive && (
+        {phase1Content && (
           <div>
             <div className={`text-xs font-mono mb-1 ${config.color} opacity-60`}>
               ▶ PHASE 1: 初期見解
             </div>
             <StreamingText text={phase1Content} isStreaming={false} className="text-gray-300" />
           </div>
+        )}
+
+        {/* Active streaming (Phase 2 or later) */}
+        {isActive && (
+          <StreamingText
+            text={output.content}
+            isStreaming={output.status === 'streaming'}
+            className={`${config.color}`}
+          />
         )}
 
         {/* Phase 2 output (shown when complete) */}
