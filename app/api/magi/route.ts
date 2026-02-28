@@ -28,8 +28,17 @@ export async function POST(request: NextRequest) {
       try {
         await runDebate(query, history ?? [], settings, controller, abortController.signal);
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        controller.enqueue(encoder.encode(encodeSSE({ type: 'error', message })));
+        const parts: string[] = [];
+        if (err instanceof Error) {
+          parts.push(err.message);
+          const cause = (err as Error & { cause?: unknown }).cause;
+          if (cause instanceof Error) parts.push(`cause: ${cause.message}`);
+          else if (cause) parts.push(`cause: ${String(cause)}`);
+        } else {
+          parts.push(String(err));
+        }
+        parts.push(`url: ${process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'}`);
+        controller.enqueue(encoder.encode(encodeSSE({ type: 'error', message: parts.join(' / ') })));
       } finally {
         controller.close();
       }

@@ -53,8 +53,11 @@ export default function HomePage() {
 
         {/* Error state */}
         {state.phase === 'error' && (
-          <div className="border border-red-800 bg-red-950 bg-opacity-20 px-4 py-3 font-mono text-sm text-red-400">
-            SYSTEM ERROR: Ollama接続に失敗しました。http://localhost:11434 でOllamaが起動していることを確認してください。
+          <div className="border border-red-800 bg-red-950 bg-opacity-20 px-4 py-3 font-mono text-sm text-red-400 space-y-1">
+            <div>SYSTEM ERROR: Ollamaとの通信に失敗しました。</div>
+            {state.errorMessage && (
+              <div className="text-red-600 text-xs break-all">{state.errorMessage}</div>
+            )}
           </div>
         )}
 

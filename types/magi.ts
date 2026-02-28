@@ -34,6 +34,7 @@ export interface MAGIState {
   currentOutputs: Record<PersonalityId, PersonalityOutput>;
   history: ConversationTurn[];
   isStreaming: boolean;
+  errorMessage?: string;
 }
 
 export interface PersonalityConfig {

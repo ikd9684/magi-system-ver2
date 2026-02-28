@@ -27,7 +27,7 @@ export function QueryInput({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === 'Enter' && e.metaKey) {
         e.preventDefault();
         handleSubmit();
       }
@@ -49,7 +49,7 @@ export function QueryInput({
       />
       <div className="flex items-center justify-between px-4 pb-3 pt-1">
         <span className="text-gray-600 text-xs font-mono">
-          {isStreaming ? '[ PROCESSING... ]' : 'Enter to submit, Shift+Enter for newline'}
+          {isStreaming ? '[ PROCESSING... ]' : '⌘+Enter to submit, Enter for newline'}
         </span>
         <div className="flex gap-2">
           {isStreaming && (

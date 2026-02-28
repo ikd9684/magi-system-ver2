@@ -138,6 +138,7 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
             ...state,
             phase: 'error',
             isStreaming: false,
+            errorMessage: event.message,
           };
 
         default:
@@ -146,7 +147,7 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
     }
 
     case 'DEBATE_ERROR':
-      return { ...state, phase: 'error', isStreaming: false };
+      return { ...state, phase: 'error', isStreaming: false, errorMessage: action.message };
 
     case 'RESET_CURRENT':
       return {
