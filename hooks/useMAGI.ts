@@ -36,7 +36,8 @@ type Action =
   | { type: 'RESET_CURRENT' }
   | { type: 'CLEAR_ALL' }
   | { type: 'LOAD_HISTORY'; turns: ConversationTurn[] }
-  | { type: 'DELETE_TURN'; id: string };
+  | { type: 'DELETE_TURN'; id: string }
+  | { type: 'RESUME_FROM'; index: number };
 
 function magiReducer(state: MAGIState, action: Action): MAGIState {
   switch (action.type) {
@@ -176,6 +177,9 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
         sessionStartIndex: action.turns.length,
       };
 
+    case 'RESUME_FROM':
+      return { ...state, sessionStartIndex: action.index };
+
     case 'DELETE_TURN': {
       const idx = state.history.findIndex((t) => t.id === action.id);
       if (idx === -1) return state;
@@ -275,6 +279,10 @@ export function useMAGI() {
     dispatch({ type: 'RESET_CURRENT' });
   }, []);
 
+  const resumeFrom = useCallback((index: number) => {
+    dispatch({ type: 'RESUME_FROM', index });
+  }, []);
+
   const deleteTurn = useCallback((id: string) => {
     persistedIdsRef.current.delete(id);
     dispatch({ type: 'DELETE_TURN', id });
@@ -305,5 +313,5 @@ export function useMAGI() {
     [state.phase, state.currentOutputs],
   );
 
-  return { state, submitQuery, abort, reset, clearAll, deleteTurn, personalityPhase };
+  return { state, submitQuery, abort, reset, clearAll, deleteTurn, resumeFrom, personalityPhase };
 }

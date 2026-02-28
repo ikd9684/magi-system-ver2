@@ -8,7 +8,7 @@ import { QueryInput } from '@/components/magi/QueryInput';
 import { ConversationHistory } from '@/components/magi/ConversationHistory';
 
 export default function HomePage() {
-  const { state, submitQuery, abort, clearAll, deleteTurn } = useMAGIContext();
+  const { state, submitQuery, abort, clearAll, deleteTurn, resumeFrom } = useMAGIContext();
   const { settings } = useSettings();
 
   const lastTurn = state.history[state.history.length - 1];
@@ -19,24 +19,12 @@ export default function HomePage() {
       <MAGIHeader phase={state.phase} isStreaming={state.isStreaming} historyCount={state.history.length} />
 
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <QueryInput
-              onSubmit={(query) => submitQuery(query, settings)}
-              onAbort={abort}
-              isStreaming={state.isStreaming}
-              placeholder="問いを入力してください..."
-            />
-          </div>
-          {state.history.length > 0 && !state.isStreaming && (
-            <button
-              onClick={clearAll}
-              className="text-xs font-mono border border-gray-700 px-3 py-2 text-gray-500 hover:border-gray-400 hover:text-gray-300 transition-colors shrink-0"
-            >
-              NEW SESSION
-            </button>
-          )}
-        </div>
+        <QueryInput
+          onSubmit={(query) => submitQuery(query, settings)}
+          onAbort={abort}
+          isStreaming={state.isStreaming}
+          placeholder="問いを入力してください..."
+        />
 
         {/* Current debate */}
         {state.phase !== 'idle' && (
@@ -82,7 +70,13 @@ export default function HomePage() {
           </div>
         )}
 
-        <ConversationHistory history={state.history} onDelete={deleteTurn} />
+        <ConversationHistory
+          history={state.history}
+          sessionStartIndex={state.sessionStartIndex}
+          onDelete={deleteTurn}
+          onResumeFrom={resumeFrom}
+          onNewSession={state.history.length > 0 && !state.isStreaming ? clearAll : undefined}
+        />
       </div>
     </main>
   );
