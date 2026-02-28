@@ -25,6 +25,7 @@ const initialState: MAGIState = {
   currentQuery: '',
   currentOutputs: makeInitialOutputs(),
   history: [],
+  sessionStartIndex: 0,
   isStreaming: false,
 };
 
@@ -161,10 +162,18 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
       };
 
     case 'CLEAR_ALL':
-      return { ...initialState, history: state.history };
+      return {
+        ...initialState,
+        history: state.history,
+        sessionStartIndex: state.history.length,
+      };
 
     case 'LOAD_HISTORY':
-      return { ...state, history: action.turns };
+      return {
+        ...state,
+        history: action.turns,
+        sessionStartIndex: action.turns.length,
+      };
 
     default:
       return state;
@@ -220,7 +229,7 @@ export function useMAGI() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query,
-            history: state.history,
+            history: state.history.slice(state.sessionStartIndex),
             settings,
           }),
           signal: controller.signal,
@@ -241,7 +250,7 @@ export function useMAGI() {
         dispatch({ type: 'DEBATE_ERROR', message: String(err) });
       }
     },
-    [state.isStreaming, state.history],
+    [state.isStreaming, state.history, state.sessionStartIndex],
   );
 
   const abort = useCallback(() => {

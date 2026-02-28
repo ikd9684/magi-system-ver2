@@ -32,7 +32,8 @@ export interface MAGIState {
   phase: DebatePhase;
   currentQuery: string;
   currentOutputs: Record<PersonalityId, PersonalityOutput>;
-  history: ConversationTurn[];
+  history: ConversationTurn[];       // 表示用ログ（全ターン）
+  sessionStartIndex: number;         // LLM コンテキストの開始位置
   isStreaming: boolean;
   errorMessage?: string;
 }
