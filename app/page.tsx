@@ -1,6 +1,6 @@
 'use client';
 
-import { useMAGI } from '@/hooks/useMAGI';
+import { useMAGIContext } from '@/contexts/MAGIContext';
 import { useSettings } from '@/hooks/useSettings';
 import { MAGIHeader } from '@/components/magi/MAGIHeader';
 import { DebateArena } from '@/components/magi/DebateArena';
@@ -8,7 +8,7 @@ import { QueryInput } from '@/components/magi/QueryInput';
 import { ConversationHistory } from '@/components/magi/ConversationHistory';
 
 export default function HomePage() {
-  const { state, submitQuery, abort, clearAll } = useMAGI();
+  const { state, submitQuery, abort, clearAll } = useMAGIContext();
   const { settings } = useSettings();
 
   const lastTurn = state.history[state.history.length - 1];
@@ -16,7 +16,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen max-w-7xl mx-auto px-6 py-8">
-      <MAGIHeader phase={state.phase} />
+      <MAGIHeader phase={state.phase} isStreaming={state.isStreaming} />
 
       <div className="space-y-6">
         <QueryInput

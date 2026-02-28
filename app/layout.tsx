@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { MAGIProvider } from '@/contexts/MAGIContext';
 
 export const metadata: Metadata = {
   title: 'MAGI SYSTEM ver.2',
@@ -20,7 +21,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        {children}
+        <MAGIProvider>{children}</MAGIProvider>
       </body>
     </html>
   );
