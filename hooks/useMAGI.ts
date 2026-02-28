@@ -161,7 +161,7 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
       };
 
     case 'CLEAR_ALL':
-      return { ...initialState };
+      return { ...initialState, history: state.history };
 
     case 'LOAD_HISTORY':
       return { ...state, history: action.turns };
@@ -257,8 +257,6 @@ export function useMAGI() {
   const clearAll = useCallback(() => {
     abortRef.current?.abort();
     dispatch({ type: 'CLEAR_ALL' });
-    persistedCountRef.current = 0;
-    fetch('/api/history', { method: 'DELETE' }).catch(() => {/* silently ignore */});
   }, []);
 
   // Compute overall phase for each personality
