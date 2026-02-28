@@ -8,7 +8,7 @@ import { QueryInput } from '@/components/magi/QueryInput';
 import { ConversationHistory } from '@/components/magi/ConversationHistory';
 
 export default function HomePage() {
-  const { state, submitQuery, abort } = useMAGI();
+  const { state, submitQuery, abort, clearAll } = useMAGI();
   const { settings } = useSettings();
 
   const lastTurn = state.history[state.history.length - 1];
@@ -34,9 +34,19 @@ export default function HomePage() {
         {state.phase !== 'idle' && (
           <div className="space-y-2">
             {state.currentQuery && (
-              <div className="text-xs font-mono text-gray-600 tracking-widest">
-                QUERY:{' '}
-                <span className="text-gray-400">{state.currentQuery}</span>
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-mono text-gray-600 tracking-widest">
+                  QUERY:{' '}
+                  <span className="text-gray-400">{state.currentQuery}</span>
+                </div>
+                {state.phase === 'complete' && (
+                  <button
+                    onClick={clearAll}
+                    className="text-xs font-mono border border-gray-700 px-3 py-1 text-gray-500 hover:border-gray-400 hover:text-gray-300 transition-colors"
+                  >
+                    NEW SESSION
+                  </button>
+                )}
               </div>
             )}
             <DebateArena

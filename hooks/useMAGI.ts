@@ -32,7 +32,8 @@ type Action =
   | { type: 'START_DEBATE'; query: string }
   | { type: 'SSE_EVENT'; event: SSEEvent }
   | { type: 'DEBATE_ERROR'; message: string }
-  | { type: 'RESET_CURRENT' };
+  | { type: 'RESET_CURRENT' }
+  | { type: 'CLEAR_ALL' };
 
 function magiReducer(state: MAGIState, action: Action): MAGIState {
   switch (action.type) {
@@ -158,6 +159,9 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
         isStreaming: false,
       };
 
+    case 'CLEAR_ALL':
+      return { ...initialState };
+
     default:
       return state;
   }
@@ -217,6 +221,11 @@ export function useMAGI() {
     dispatch({ type: 'RESET_CURRENT' });
   }, []);
 
+  const clearAll = useCallback(() => {
+    abortRef.current?.abort();
+    dispatch({ type: 'CLEAR_ALL' });
+  }, []);
+
   // Compute overall phase for each personality
   const personalityPhase = useCallback(
     (id: PersonalityId): 1 | 2 | 3 | null => {
@@ -235,5 +244,5 @@ export function useMAGI() {
     [state.phase, state.currentOutputs],
   );
 
-  return { state, submitQuery, abort, reset, personalityPhase };
+  return { state, submitQuery, abort, reset, clearAll, personalityPhase };
 }

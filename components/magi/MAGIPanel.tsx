@@ -105,27 +105,6 @@ export function MAGIPanel({ personalityId, output, debatePhase }: MAGIPanelProps
         )}
       </div>
 
-      {/* Vote result */}
-      {output.vote && (
-        <div
-          className={`border-t ${config.borderColor} px-4 py-3 bg-black bg-opacity-60`}
-        >
-          <div className="flex items-center gap-3">
-            <span
-              className={`font-mono font-bold text-lg tracking-widest ${
-                output.vote === '承認'
-                  ? 'text-green-400'
-                  : output.vote === '否決'
-                    ? 'text-red-400'
-                    : 'text-yellow-400'
-              }`}
-            >
-              [{output.vote}]
-            </span>
-            <span className="text-gray-400 text-sm font-mono">{output.voteComment}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
