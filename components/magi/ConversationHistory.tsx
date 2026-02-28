@@ -13,33 +13,31 @@ function TurnSummary({ turn, onDelete }: { turn: ConversationTurn; onDelete: (id
   const [expanded, setExpanded] = useState(false);
   const isApproved = turn.approvedCount >= 2;
 
+  const handleDelete = () => {
+    if (window.confirm(`この履歴を削除しますか？\n「${turn.query}」`)) {
+      onDelete(turn.id);
+    }
+  };
+
   return (
     <div className="border border-gray-800 rounded-sm overflow-hidden">
-      <div className="flex items-center">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-4 py-3 bg-black bg-opacity-40 hover:bg-opacity-60 transition-colors text-left min-w-0"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <span className={`text-xs font-mono font-bold tracking-widest shrink-0 ${isApproved ? 'text-green-400' : 'text-red-400'}`}>
-              {turn.approvedCount}/3
-            </span>
-            <span className="text-gray-400 text-sm font-mono truncate">{turn.query}</span>
-          </div>
-          <div className="flex items-center gap-3 shrink-0 ml-4">
-            <span className="text-gray-600 text-xs font-mono">
-              {new Date(turn.timestamp).toLocaleTimeString()}
-            </span>
-            <span className="text-gray-500 text-xs">{expanded ? '▲' : '▼'}</span>
-          </div>
-        </button>
-        <button
-          onClick={() => onDelete(turn.id)}
-          className="px-3 py-3 text-gray-700 hover:text-red-500 transition-colors font-mono text-xs shrink-0 border-l border-gray-800"
-        >
-          DELETE
-        </button>
-      </div>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-black bg-opacity-40 hover:bg-opacity-60 transition-colors text-left"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span className={`text-xs font-mono font-bold tracking-widest shrink-0 ${isApproved ? 'text-green-400' : 'text-red-400'}`}>
+            {turn.approvedCount}/3
+          </span>
+          <span className="text-gray-400 text-sm font-mono truncate">{turn.query}</span>
+        </div>
+        <div className="flex items-center gap-3 shrink-0 ml-4">
+          <span className="text-gray-600 text-xs font-mono">
+            {new Date(turn.timestamp).toLocaleTimeString()}
+          </span>
+          <span className="text-gray-500 text-xs">{expanded ? '▲' : '▼'}</span>
+        </div>
+      </button>
 
       {expanded && (
         <div className="border-t border-gray-800 p-4 space-y-3">
@@ -70,6 +68,14 @@ function TurnSummary({ turn, onDelete }: { turn: ConversationTurn; onDelete: (id
               </div>
             );
           })}
+          <div className="pt-2 border-t border-gray-800 flex justify-end">
+            <button
+              onClick={handleDelete}
+              className="text-xs font-mono border border-gray-800 px-3 py-1 text-gray-600 hover:border-red-800 hover:text-red-500 transition-colors"
+            >
+              DELETE
+            </button>
+          </div>
         </div>
       )}
     </div>
