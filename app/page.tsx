@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import { useMAGIContext } from '@/contexts/MAGIContext';
 import { useSettings } from '@/hooks/useSettings';
 import { MAGIHeader } from '@/components/magi/MAGIHeader';
@@ -10,20 +11,51 @@ import { ConversationHistory } from '@/components/magi/ConversationHistory';
 export default function HomePage() {
   const { state, submitQuery, abort, clearAll, deleteTurn, resumeFrom } = useMAGIContext();
   const { settings } = useSettings();
+  const [historyVisible, setHistoryVisible] = useState(true);
+  const prevHistoryLengthRef = useRef(state.history.length);
+
+  // 議論完了で新ターンが追加されたら履歴を自動表示
+  useEffect(() => {
+    if (state.history.length > prevHistoryLengthRef.current) {
+      setHistoryVisible(true);
+    }
+    prevHistoryLengthRef.current = state.history.length;
+  }, [state.history.length]);
+
+  const handleNewSession = () => {
+    clearAll();
+    setHistoryVisible(false);
+  };
+
+  const handleShowHistory = () => {
+    setHistoryVisible(true);
+    setTimeout(() => {
+      document.getElementById('conversation-history')?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+  };
+
+  const contextCount = state.history.length - state.sessionStartIndex;
+  const placeholder = contextCount > 0
+    ? `${contextCount}件の履歴をコンテキストに含めて会話中...`
+    : '問いを入力してください...';
 
   const lastTurn = state.history[state.history.length - 1];
-  const showArena = state.phase !== 'idle' || state.history.length > 0;
 
   return (
     <main className="min-h-screen max-w-7xl mx-auto px-6 py-8">
-      <MAGIHeader phase={state.phase} isStreaming={state.isStreaming} historyCount={state.history.length} />
+      <MAGIHeader
+        phase={state.phase}
+        isStreaming={state.isStreaming}
+        historyCount={state.history.length}
+        onShowHistory={handleShowHistory}
+      />
 
       <div className="space-y-6">
         <QueryInput
           onSubmit={(query) => submitQuery(query, settings)}
           onAbort={abort}
           isStreaming={state.isStreaming}
-          placeholder="問いを入力してください..."
+          placeholder={placeholder}
         />
 
         {/* Current debate */}
@@ -70,13 +102,15 @@ export default function HomePage() {
           </div>
         )}
 
-        <ConversationHistory
-          history={state.history}
-          sessionStartIndex={state.sessionStartIndex}
-          onDelete={deleteTurn}
-          onResumeFrom={resumeFrom}
-          onNewSession={state.history.length > 0 && !state.isStreaming ? clearAll : undefined}
-        />
+        {historyVisible && (
+          <ConversationHistory
+            history={state.history}
+            sessionStartIndex={state.sessionStartIndex}
+            onDelete={deleteTurn}
+            onResumeFrom={resumeFrom}
+            onNewSession={state.history.length > 0 && !state.isStreaming ? handleNewSession : undefined}
+          />
+        )}
       </div>
     </main>
   );

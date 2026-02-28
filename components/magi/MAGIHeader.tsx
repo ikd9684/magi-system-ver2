@@ -7,6 +7,7 @@ interface MAGIHeaderProps {
   phase: DebatePhase;
   isStreaming: boolean;
   historyCount: number;
+  onShowHistory: () => void;
 }
 
 const PHASE_LABELS: Record<DebatePhase, string> = {
@@ -27,7 +28,7 @@ const PHASE_COLORS: Record<DebatePhase, string> = {
   error: 'text-red-400',
 };
 
-export function MAGIHeader({ phase, isStreaming, historyCount }: MAGIHeaderProps) {
+export function MAGIHeader({ phase, isStreaming, historyCount, onShowHistory }: MAGIHeaderProps) {
   return (
     <header className="border-b border-gray-800 pb-4 mb-8">
       <div className="flex items-start justify-between">
@@ -47,12 +48,12 @@ export function MAGIHeader({ phase, isStreaming, historyCount }: MAGIHeaderProps
             </span>
           </div>
           {historyCount > 0 && (
-            <a
-              href="#conversation-history"
+            <button
+              onClick={onShowHistory}
               className="text-xs font-mono border border-gray-700 px-3 py-1.5 text-gray-400 hover:border-gray-400 hover:text-gray-200 transition-colors"
             >
               HISTORY ({historyCount})
-            </a>
+            </button>
           )}
           {isStreaming ? (
             <span className="text-xs font-mono border border-gray-800 px-3 py-1.5 text-gray-700 cursor-not-allowed">
