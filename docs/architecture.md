@@ -225,10 +225,20 @@ app/layout.tsx (Server Component)
 - ストリーミング中は `MAGIHeader` の SETTINGS リンクが無効化され、設定変更を防止
 - `HISTORY (N)` ボタン: 履歴が1件以上あるとヘッダーに表示。クリックで `#conversation-history` にスクロール
 
+**history の二重役割の分離:**
+
+`history`（全ターン配列）と `sessionStartIndex`（現セッションの開始位置）を分けて管理する。
+
+| 操作 | 表示ログ（`history`） | LLM コンテキスト（`history.slice(sessionStartIndex)`） |
+|------|----------------------|------------------------------------------------------|
+| ターン完了 | 追加される | 追加される（セッション内マルチターン） |
+| NEW SESSION | 保持 | 空になる（`sessionStartIndex = history.length`） |
+| 起動時 DB 復元 | 全件ロード | 空（`sessionStartIndex = loaded.length`） |
+
 **NEW SESSION の挙動:**
-- 現在の議論・フェーズ・入力をリセットする（`CLEAR_ALL` アクション）
-- 過去の会話ターン（`history`）は保持される — 履歴ログとして残り、SQLite も削除しない
-- **注意:** `history` は LLM コンテキストとしても使われるため、NEW SESSION 後も次のクエリには過去のターンが渡る（会話は継続扱い）
+- 現在の議論・フェーズ・入力をリセット
+- 過去ターンは UI の履歴ログに残り、SQLite も削除しない
+- 次のクエリから LLM コンテキストは空（前の会話を引き継がない）
 
 ---
 
