@@ -48,6 +48,10 @@ export function insertTurn(turn: ConversationTurn): void {
   `).run(turn.id, turn.query, JSON.stringify(turn.outputs), turn.approvedCount, turn.timestamp);
 }
 
+export function deleteTurn(id: string): void {
+  db.prepare('DELETE FROM conversation_turns WHERE id = ?').run(id);
+}
+
 export function clearAllTurns(): void {
   db.prepare('DELETE FROM conversation_turns').run();
 }

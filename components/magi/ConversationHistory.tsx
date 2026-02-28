@@ -6,31 +6,41 @@ import { DEFAULT_PERSONALITIES, PERSONALITY_IDS } from '@/lib/personalities';
 
 interface ConversationHistoryProps {
   history: ConversationTurn[];
+  onDelete: (id: string) => void;
 }
 
-function TurnSummary({ turn }: { turn: ConversationTurn }) {
+function TurnSummary({ turn, onDelete }: { turn: ConversationTurn; onDelete: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   const isApproved = turn.approvedCount >= 2;
 
   return (
     <div className="border border-gray-800 rounded-sm overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-black bg-opacity-40 hover:bg-opacity-60 transition-colors text-left"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <span className={`text-xs font-mono font-bold tracking-widest shrink-0 ${isApproved ? 'text-green-400' : 'text-red-400'}`}>
-            {turn.approvedCount}/3
-          </span>
-          <span className="text-gray-400 text-sm font-mono truncate">{turn.query}</span>
-        </div>
-        <div className="flex items-center gap-3 shrink-0 ml-4">
-          <span className="text-gray-600 text-xs font-mono">
-            {new Date(turn.timestamp).toLocaleTimeString()}
-          </span>
-          <span className="text-gray-500 text-xs">{expanded ? '▲' : '▼'}</span>
-        </div>
-      </button>
+      <div className="flex items-center">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex-1 flex items-center justify-between px-4 py-3 bg-black bg-opacity-40 hover:bg-opacity-60 transition-colors text-left min-w-0"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className={`text-xs font-mono font-bold tracking-widest shrink-0 ${isApproved ? 'text-green-400' : 'text-red-400'}`}>
+              {turn.approvedCount}/3
+            </span>
+            <span className="text-gray-400 text-sm font-mono truncate">{turn.query}</span>
+          </div>
+          <div className="flex items-center gap-3 shrink-0 ml-4">
+            <span className="text-gray-600 text-xs font-mono">
+              {new Date(turn.timestamp).toLocaleTimeString()}
+            </span>
+            <span className="text-gray-500 text-xs">{expanded ? '▲' : '▼'}</span>
+          </div>
+        </button>
+        <button
+          onClick={() => onDelete(turn.id)}
+          className="px-3 py-3 text-gray-700 hover:text-red-500 transition-colors font-mono text-xs shrink-0 border-l border-gray-800"
+          title="削除"
+        >
+          ✕
+        </button>
+      </div>
 
       {expanded && (
         <div className="border-t border-gray-800 p-4 space-y-3">
@@ -67,7 +77,7 @@ function TurnSummary({ turn }: { turn: ConversationTurn }) {
   );
 }
 
-export function ConversationHistory({ history }: ConversationHistoryProps) {
+export function ConversationHistory({ history, onDelete }: ConversationHistoryProps) {
   if (history.length === 0) return null;
 
   return (
@@ -77,7 +87,7 @@ export function ConversationHistory({ history }: ConversationHistoryProps) {
       </div>
       <div className="space-y-2">
         {[...history].reverse().map((turn) => (
-          <TurnSummary key={turn.id} turn={turn} />
+          <TurnSummary key={turn.id} turn={turn} onDelete={onDelete} />
         ))}
       </div>
     </div>

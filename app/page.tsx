@@ -8,7 +8,7 @@ import { QueryInput } from '@/components/magi/QueryInput';
 import { ConversationHistory } from '@/components/magi/ConversationHistory';
 
 export default function HomePage() {
-  const { state, submitQuery, abort, clearAll } = useMAGIContext();
+  const { state, submitQuery, abort, clearAll, deleteTurn } = useMAGIContext();
   const { settings } = useSettings();
 
   const lastTurn = state.history[state.history.length - 1];
@@ -84,7 +84,7 @@ export default function HomePage() {
           </div>
         )}
 
-        <ConversationHistory history={state.history} />
+        <ConversationHistory history={state.history} onDelete={deleteTurn} />
       </div>
     </main>
   );

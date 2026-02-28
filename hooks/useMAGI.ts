@@ -35,7 +35,8 @@ type Action =
   | { type: 'DEBATE_ERROR'; message: string }
   | { type: 'RESET_CURRENT' }
   | { type: 'CLEAR_ALL' }
-  | { type: 'LOAD_HISTORY'; turns: ConversationTurn[] };
+  | { type: 'LOAD_HISTORY'; turns: ConversationTurn[] }
+  | { type: 'DELETE_TURN'; id: string };
 
 function magiReducer(state: MAGIState, action: Action): MAGIState {
   switch (action.type) {
@@ -175,6 +176,17 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
         sessionStartIndex: action.turns.length,
       };
 
+    case 'DELETE_TURN': {
+      const idx = state.history.findIndex((t) => t.id === action.id);
+      if (idx === -1) return state;
+      const newHistory = state.history.filter((t) => t.id !== action.id);
+      // sessionStartIndex を削除位置に合わせてずらす
+      const newSessionStartIndex = idx < state.sessionStartIndex
+        ? Math.max(0, state.sessionStartIndex - 1)
+        : state.sessionStartIndex;
+      return { ...state, history: newHistory, sessionStartIndex: newSessionStartIndex };
+    }
+
     default:
       return state;
   }
@@ -183,28 +195,28 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
 export function useMAGI() {
   const [state, dispatch] = useReducer(magiReducer, initialState);
   const abortRef = useRef<AbortController | null>(null);
-  // Tracks how many turns have already been persisted to DB
-  const persistedCountRef = useRef(0);
+  // DB に保存済みのターン ID を追跡
+  const persistedIdsRef = useRef<Set<string>>(new Set());
 
   // Load persisted history on mount
   useEffect(() => {
     fetch('/api/history')
       .then((r) => r.json())
       .then((turns: ConversationTurn[]) => {
+        persistedIdsRef.current = new Set(turns.map((t) => t.id));
         if (turns.length > 0) {
           dispatch({ type: 'LOAD_HISTORY', turns });
-          persistedCountRef.current = turns.length;
         }
       })
       .catch(() => {/* silently ignore */});
   }, []);
 
-  // Persist any newly completed turns (fire-and-forget)
+  // 未保存のターンを DB に永続化（fire-and-forget）
   useEffect(() => {
-    const newTurns = state.history.slice(persistedCountRef.current);
+    const newTurns = state.history.filter((t) => !persistedIdsRef.current.has(t.id));
     if (newTurns.length === 0) return;
-    persistedCountRef.current = state.history.length;
     for (const turn of newTurns) {
+      persistedIdsRef.current.add(turn.id);
       fetch('/api/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -263,6 +275,13 @@ export function useMAGI() {
     dispatch({ type: 'RESET_CURRENT' });
   }, []);
 
+  const deleteTurn = useCallback((id: string) => {
+    persistedIdsRef.current.delete(id);
+    dispatch({ type: 'DELETE_TURN', id });
+    fetch(`/api/history?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      .catch(() => {/* silently ignore */});
+  }, []);
+
   const clearAll = useCallback(() => {
     abortRef.current?.abort();
     dispatch({ type: 'CLEAR_ALL' });
@@ -286,5 +305,5 @@ export function useMAGI() {
     [state.phase, state.currentOutputs],
   );
 
-  return { state, submitQuery, abort, reset, clearAll, personalityPhase };
+  return { state, submitQuery, abort, reset, clearAll, deleteTurn, personalityPhase };
 }

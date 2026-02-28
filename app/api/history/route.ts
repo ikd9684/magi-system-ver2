@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllTurns, insertTurn, clearAllTurns } from '@/lib/db';
+import { getAllTurns, insertTurn, deleteTurn, clearAllTurns } from '@/lib/db';
 import type { ConversationTurn } from '@/types/magi';
 
 export const runtime = 'nodejs';
@@ -15,7 +15,13 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true });
 }
 
-export function DELETE() {
-  clearAllTurns();
+export function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  if (id) {
+    deleteTurn(id);
+  } else {
+    clearAllTurns();
+  }
   return NextResponse.json({ ok: true });
 }
