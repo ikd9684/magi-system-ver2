@@ -184,6 +184,16 @@ function buildMessageHistory(history, personalityId) {
 }
 ```
 
+**コンテキストに含まれる内容（人格ごとに独立）:**
+
+| 含まれる | 含まれない |
+|---------|-----------|
+| 過去のクエリ（`turn.query`） | 他の人格の発言 |
+| その人格自身の Phase1（初期見解） | 投票結果（vote / voteComment） |
+| その人格自身の Phase2（反論・補足） | Phase3 の投票コメント |
+
+各人格は「ユーザーと自分だけの会話履歴」として過去ターンを受け取る。他の人格が何を言ったかは知らない。
+
 ---
 
 ## UIビジュアル設計
@@ -223,22 +233,28 @@ app/layout.tsx (Server Component)
 **ポイント:**
 - `MAGIProvider` をルートレイアウトに置くことで、`/` ↔ `/settings` のページ遷移をまたいで状態が保持される
 - ストリーミング中は `MAGIHeader` の SETTINGS リンクが無効化され、設定変更を防止
-- `HISTORY (N)` ボタン: 履歴が1件以上あるとヘッダーに表示。クリックで `#conversation-history` にスクロール
+- `HISTORY (N)` ボタン: 履歴が1件以上あるとヘッダーに表示。クリックで履歴セクションを表示＆スクロール
 
 **history の二重役割の分離:**
 
-`history`（全ターン配列）と `sessionStartIndex`（現セッションの開始位置）を分けて管理する。
+`history`（全ターン配列）と `sessionStartIndex`（LLM コンテキストの開始位置）を分けて管理する。
 
 | 操作 | 表示ログ（`history`） | LLM コンテキスト（`history.slice(sessionStartIndex)`） |
 |------|----------------------|------------------------------------------------------|
 | ターン完了 | 追加される | 追加される（セッション内マルチターン） |
-| NEW SESSION | 保持 | 空になる（`sessionStartIndex = history.length`） |
+| 「続きから」ボタン | 変化なし | そのターン以降を含める（`sessionStartIndex = index`） |
+| NEW SESSION | 保持・非表示 | 空になる（`sessionStartIndex = history.length`） |
 | 起動時 DB 復元 | 全件ロード | 空（`sessionStartIndex = loaded.length`） |
 
 **NEW SESSION の挙動:**
 - 現在の議論・フェーズ・入力をリセット
-- 過去ターンは UI の履歴ログに残り、SQLite も削除しない
+- 過去ターンは SQLite に残るが UI の履歴セクションを非表示にする（`historyVisible = false`）
 - 次のクエリから LLM コンテキストは空（前の会話を引き継がない）
+- ヘッダーの HISTORY ボタンで履歴を再表示可能。新ターン完了時も自動再表示
+
+**QueryInput プレースホルダー:**
+- `sessionStartIndex < history.length` のとき: `N件の履歴をコンテキストに含めて会話中...`
+- それ以外: `問いを入力してください...`
 
 ---
 
@@ -262,12 +278,14 @@ CREATE TABLE conversation_turns (
 |---------|------|------|
 | GET | `/api/history` | 全ターンを timestamp 昇順で返す |
 | POST | `/api/history` | `ConversationTurn` を1件保存 |
-| DELETE | `/api/history` | 全ターン削除 |
+| DELETE | `/api/history?id=xxx` | 指定 ID のターンを削除 |
+| DELETE | `/api/history` | 全ターン削除（id 省略時） |
 
 **クライアント側フロー (`useMAGI.ts`):**
-- マウント時 → `GET /api/history` → `LOAD_HISTORY` dispatch
-- 議論完了時 → `POST /api/history`（fire-and-forget）
-- NEW SESSION → `DELETE /api/history`
+- マウント時 → `GET /api/history` → `LOAD_HISTORY` dispatch（`sessionStartIndex = loaded.length`）
+- 議論完了時 → `POST /api/history`（fire-and-forget、`persistedIdsRef` で二重保存防止）
+- 個別削除 → `DELETE /api/history?id=xxx` + `DELETE_TURN` dispatch
+- NEW SESSION → DB は変更しない（UI の `historyVisible` を false にするのみ）
 
 ---
 
