@@ -36,9 +36,8 @@ function TurnSummary({ turn, onDelete }: { turn: ConversationTurn; onDelete: (id
         <button
           onClick={() => onDelete(turn.id)}
           className="px-3 py-3 text-gray-700 hover:text-red-500 transition-colors font-mono text-xs shrink-0 border-l border-gray-800"
-          title="削除"
         >
-          ✕
+          DELETE
         </button>
       </div>
 
