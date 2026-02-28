@@ -19,34 +19,32 @@ export default function HomePage() {
       <MAGIHeader phase={state.phase} isStreaming={state.isStreaming} historyCount={state.history.length} />
 
       <div className="space-y-6">
-        <QueryInput
-          onSubmit={(query) => submitQuery(query, settings)}
-          onAbort={abort}
-          isStreaming={state.isStreaming}
-          placeholder={
-            state.history.length > 0
-              ? '次の問いを入力してください（会話継続中）...'
-              : '問いを入力してください...'
-          }
-        />
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <QueryInput
+              onSubmit={(query) => submitQuery(query, settings)}
+              onAbort={abort}
+              isStreaming={state.isStreaming}
+              placeholder="問いを入力してください..."
+            />
+          </div>
+          {state.history.length > 0 && !state.isStreaming && (
+            <button
+              onClick={clearAll}
+              className="text-xs font-mono border border-gray-700 px-3 py-2 text-gray-500 hover:border-gray-400 hover:text-gray-300 transition-colors shrink-0"
+            >
+              NEW SESSION
+            </button>
+          )}
+        </div>
 
         {/* Current debate */}
         {state.phase !== 'idle' && (
           <div className="space-y-2">
             {state.currentQuery && (
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-mono text-gray-600 tracking-widest">
-                  QUERY:{' '}
-                  <span className="text-gray-400">{state.currentQuery}</span>
-                </div>
-                {state.phase === 'complete' && (
-                  <button
-                    onClick={clearAll}
-                    className="text-xs font-mono border border-gray-700 px-3 py-1 text-gray-500 hover:border-gray-400 hover:text-gray-300 transition-colors"
-                  >
-                    NEW SESSION
-                  </button>
-                )}
+              <div className="text-xs font-mono text-gray-600 tracking-widest">
+                QUERY:{' '}
+                <span className="text-gray-400">{state.currentQuery}</span>
               </div>
             )}
             <DebateArena
