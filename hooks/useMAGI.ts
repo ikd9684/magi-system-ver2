@@ -1,6 +1,6 @@
 'use client';
 
-import { useReducer, useCallback, useRef } from 'react';
+import { useReducer, useCallback, useRef, useEffect } from 'react';
 import type {
   MAGIState,
   PersonalityId,
@@ -33,7 +33,8 @@ type Action =
   | { type: 'SSE_EVENT'; event: SSEEvent }
   | { type: 'DEBATE_ERROR'; message: string }
   | { type: 'RESET_CURRENT' }
-  | { type: 'CLEAR_ALL' };
+  | { type: 'CLEAR_ALL' }
+  | { type: 'LOAD_HISTORY'; turns: ConversationTurn[] };
 
 function magiReducer(state: MAGIState, action: Action): MAGIState {
   switch (action.type) {
@@ -162,6 +163,9 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
     case 'CLEAR_ALL':
       return { ...initialState };
 
+    case 'LOAD_HISTORY':
+      return { ...state, history: action.turns };
+
     default:
       return state;
   }
@@ -170,6 +174,35 @@ function magiReducer(state: MAGIState, action: Action): MAGIState {
 export function useMAGI() {
   const [state, dispatch] = useReducer(magiReducer, initialState);
   const abortRef = useRef<AbortController | null>(null);
+  // Tracks how many turns have already been persisted to DB
+  const persistedCountRef = useRef(0);
+
+  // Load persisted history on mount
+  useEffect(() => {
+    fetch('/api/history')
+      .then((r) => r.json())
+      .then((turns: ConversationTurn[]) => {
+        if (turns.length > 0) {
+          dispatch({ type: 'LOAD_HISTORY', turns });
+          persistedCountRef.current = turns.length;
+        }
+      })
+      .catch(() => {/* silently ignore */});
+  }, []);
+
+  // Persist any newly completed turns (fire-and-forget)
+  useEffect(() => {
+    const newTurns = state.history.slice(persistedCountRef.current);
+    if (newTurns.length === 0) return;
+    persistedCountRef.current = state.history.length;
+    for (const turn of newTurns) {
+      fetch('/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(turn),
+      }).catch(() => {/* silently ignore */});
+    }
+  }, [state.history]);
 
   const submitQuery = useCallback(
     async (query: string, settings: MAGISettings) => {
@@ -224,6 +257,8 @@ export function useMAGI() {
   const clearAll = useCallback(() => {
     abortRef.current?.abort();
     dispatch({ type: 'CLEAR_ALL' });
+    persistedCountRef.current = 0;
+    fetch('/api/history', { method: 'DELETE' }).catch(() => {/* silently ignore */});
   }, []);
 
   // Compute overall phase for each personality

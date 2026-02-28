@@ -18,6 +18,7 @@ MELCHIOR・BALTHASAR・CASPERが順番に発言し、最終的に各人格が「
 | State管理 | useReducer (クライアント) |
 | 通信 | SSE (Server-Sent Events) |
 | 設定永続化 | localStorage |
+| 会話履歴永続化 | SQLite (`better-sqlite3`, `data/magi.db`) |
 
 ---
 
@@ -57,8 +58,10 @@ Phase 3 - 投票（並列実行）
 │   ├── settings/
 │   │   └── page.tsx               # 設定ページ（人格プロンプト・モデル編集）
 │   └── api/
-│       └── magi/
-│           └── route.ts           # SSEエンドポイント（POST）
+│       ├── magi/
+│       │   └── route.ts           # SSEエンドポイント（POST）
+│       └── history/
+│           └── route.ts           # 会話履歴 CRUD（GET/POST/DELETE）
 ├── components/
 │   ├── magi/
 │   │   ├── MAGIHeader.tsx         # タイトル・フェーズインジケーター
@@ -78,9 +81,12 @@ Phase 3 - 投票（並列実行）
 │   ├── ollama.ts                  # Ollama クライアント（サーバーサイド専用）
 │   ├── magi-engine.ts             # 議論エンジン（9回呼び出しのオーケストレーション）
 │   ├── personalities.ts           # デフォルト人格プロンプト・カラー定義
-│   └── sse-utils.ts               # SSEパース・エンコードヘルパー
+│   ├── sse-utils.ts               # SSEパース・エンコードヘルパー
+│   └── db.ts                      # SQLite ヘルパー（getAllTurns/insertTurn/clearAllTurns）
 ├── types/
 │   └── magi.ts                    # 全型定義
+├── data/
+│   └── magi.db                    # SQLite DB（gitignore 対象）
 └── docs/
     └── architecture.md            # 本ドキュメント
 ```
@@ -199,6 +205,35 @@ function buildMessageHistory(history, personalityId) {
 | thinking | PROCESSING / 黄色・点滅 |
 | streaming | TRANSMITTING / 緑 |
 | done | COMPLETE / グレー |
+
+---
+
+## 会話履歴の永続化
+
+**DBファイル:** `data/magi.db`（gitignore 対象）
+
+**スキーマ:**
+```sql
+CREATE TABLE conversation_turns (
+  id             TEXT    PRIMARY KEY,
+  query          TEXT    NOT NULL,
+  outputs        TEXT    NOT NULL,  -- JSON (Record<PersonalityId, PersonalityOutput>)
+  approved_count INTEGER NOT NULL,
+  timestamp      INTEGER NOT NULL
+);
+```
+
+**API:**
+| メソッド | パス | 内容 |
+|---------|------|------|
+| GET | `/api/history` | 全ターンを timestamp 昇順で返す |
+| POST | `/api/history` | `ConversationTurn` を1件保存 |
+| DELETE | `/api/history` | 全ターン削除 |
+
+**クライアント側フロー (`useMAGI.ts`):**
+- マウント時 → `GET /api/history` → `LOAD_HISTORY` dispatch
+- 議論完了時 → `POST /api/history`（fire-and-forget）
+- NEW SESSION → `DELETE /api/history`
 
 ---
 
