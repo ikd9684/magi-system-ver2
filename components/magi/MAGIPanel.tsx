@@ -88,7 +88,7 @@ export function MAGIPanel({ personalityId, output, debatePhase }: MAGIPanelProps
         )}
 
         {/* Phase 2 output (shown when complete) */}
-        {phase2Content && !isActive && (
+        {phase2Content && (
           <div>
             <div className={`text-xs font-mono mb-1 ${config.color} opacity-60`}>
               ▶ PHASE 2: 反論・補足
