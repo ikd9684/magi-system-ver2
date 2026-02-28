@@ -225,6 +225,11 @@ app/layout.tsx (Server Component)
 - ストリーミング中は `MAGIHeader` の SETTINGS リンクが無効化され、設定変更を防止
 - `HISTORY (N)` ボタン: 履歴が1件以上あるとヘッダーに表示。クリックで `#conversation-history` にスクロール
 
+**NEW SESSION の挙動:**
+- 現在の議論・フェーズ・入力をリセットする（`CLEAR_ALL` アクション）
+- 過去の会話ターン（`history`）は保持される — 履歴ログとして残り、SQLite も削除しない
+- **注意:** `history` は LLM コンテキストとしても使われるため、NEW SESSION 後も次のクエリには過去のターンが渡る（会話は継続扱い）
+
 ---
 
 ## 会話履歴の永続化
