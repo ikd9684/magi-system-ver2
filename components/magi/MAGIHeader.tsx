@@ -6,6 +6,7 @@ import type { DebatePhase } from '@/types/magi';
 interface MAGIHeaderProps {
   phase: DebatePhase;
   isStreaming: boolean;
+  historyCount: number;
 }
 
 const PHASE_LABELS: Record<DebatePhase, string> = {
@@ -26,7 +27,7 @@ const PHASE_COLORS: Record<DebatePhase, string> = {
   error: 'text-red-400',
 };
 
-export function MAGIHeader({ phase, isStreaming }: MAGIHeaderProps) {
+export function MAGIHeader({ phase, isStreaming, historyCount }: MAGIHeaderProps) {
   return (
     <header className="border-b border-gray-800 pb-4 mb-8">
       <div className="flex items-start justify-between">
@@ -45,6 +46,14 @@ export function MAGIHeader({ phase, isStreaming }: MAGIHeaderProps) {
               {PHASE_LABELS[phase]}
             </span>
           </div>
+          {historyCount > 0 && (
+            <a
+              href="#conversation-history"
+              className="text-xs font-mono border border-gray-700 px-3 py-1.5 text-gray-400 hover:border-gray-400 hover:text-gray-200 transition-colors"
+            >
+              HISTORY ({historyCount})
+            </a>
+          )}
           {isStreaming ? (
             <span className="text-xs font-mono border border-gray-800 px-3 py-1.5 text-gray-700 cursor-not-allowed">
               SETTINGS

@@ -71,7 +71,7 @@ export function ConversationHistory({ history }: ConversationHistoryProps) {
   if (history.length === 0) return null;
 
   return (
-    <div className="w-full mt-8">
+    <div id="conversation-history" className="w-full mt-8">
       <div className="text-xs font-mono text-gray-600 tracking-widest mb-3">
         ── CONVERSATION HISTORY ({history.length}) ──
       </div>
