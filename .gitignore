@@ -1,6 +1,9 @@
 # claude
 /.claude
 
+# git worktrees
+/.worktrees
+
 # dependencies
 /node_modules
 /.pnp
